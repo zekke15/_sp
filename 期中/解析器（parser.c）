@@ -1,0 +1,99 @@
+#include <stdlib.h>
+#include <string.h>
+#include "interpreter.h"
+
+靜態令牌前瞻；
+
+static void advance() {
+lookahead = get_next_token();
+}
+
+static AST *parse_expr();
+
+static AST *parse_primary() {
+如果 (lookahead.type == TOKEN_NUMBER) {
+AST *node = malloc(sizeof(AST));
+node->kind = AST_NUM;
+node->value = atoi(lookahead.text);
+進步（）;
+返回節點；
+} else if (lookahead.type == TOKEN_IDENTIFIER) {
+AST *node = malloc(sizeof(AST));
+node->kind = AST_VAR;
+strcpy(node->name, lookahead.text);
+進步（）;
+返回節點；
+}
+返回 NULL；
+}
+
+static AST *parse_term() {
+AST *node = parse_primary();
+while (lookahead.type == TOKEN_OPERATOR &&
+(lookahead.text[0] == '*' || lookahead.text[0] == '/')) {
+char op = lookahead.text[0];
+進步（）;
+AST *right = parse_primary();
+AST *newnode = malloc(sizeof(AST));
+newnode->kind = AST_BINOP;
+newnode->op = op;
+newnode->left = 節點;
+newnode->right = right;
+節點 = newnode;
+}
+返回節點；
+}
+
+static AST *parse_expr() {
+AST *node = parse_term();
+while (lookahead.type == TOKEN_OPERATOR &&
+(lookahead.text[0] == '+' || lookahead.text[0] == '-')) {
+char op = lookahead.text[0];
+進步（）;
+AST *right = parse_term();
+AST *newnode = malloc(sizeof(AST));
+newnode->kind = AST_BINOP;
+newnode->op = op;
+newnode->left = 節點;
+newnode->right = right;
+節點 = newnode;
+}
+返回節點；
+}
+
+AST *parse_statement() {
+進步（）;
+如果 (lookahead.type == TOKEN_IDENTIFIER) {
+Token var = 前瞻；
+進步（）;
+如果 (lookahead.type == TOKEN_ASSIGN) {
+進步（）;
+AST *rhs = parse_expr();
+AST *node = malloc(sizeof(AST));
+node->kind = AST_ASSIGN;
+strcpy(node->name, var.text);
+node->expr = rhs;
+返回節點；
+}
+}
+如果 (lookahead.type == TOKEN_PRINT) {
+進步（）;
+AST *expr = parse_expr();
+AST *node = malloc(sizeof(AST));
+node->kind = AST_PRINT;
+node->expr = expr;
+返回節點；
+}
+返回 NULL；
+}
+
+void free_ast(AST *node) {
+如果 (!node) 返回；
+如果 (node->kind == AST_BINOP) {
+free_ast(node->left);
+free_ast(node->right);
+} else if (node->kind == AST_ASSIGN || node->kind == AST_PRINT) {
+free_ast(node->expr);
+}
+釋放（節點）；
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人話寫扣：用 AI 代理人打造專屬編譯器與虛擬機</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <style>
+        body { max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.8; }
+        pre { background: #f4f4f4; padding: 15px; border-left: 5px solid #0076ff; overflow-x: auto; }
+        code { font-family: 'Courier New', Courier, monospace; color: #d63384; }
+        pre code { color: #333; }
+        .chapter { margin-top: 50px; border-top: 2px solid #eee; padding-top: 30px; }
+    </style>
+</head>
+<body>
+    <h1>📖 人話寫扣：用 AI 代理人打造專屬編譯器與虛擬機</h1>
+    <p><strong>作者：</strong> Ryan & Gemini AI 協同著作</p>
+    <p><strong>年份：</strong> 2026年</p>
+    
+    <hr>
+
+    <h2>📌 前言：當系統程式碰上大模型浪潮</h2>
+    <p>本專案完美體現了現代編譯器將高階抽象邏輯轉換為低階機器碼並執行的核心原理。傳統上，我們需要花費數週編寫複雜的 Lexer 與 Parser 語法樹；但在 2026 年的今天，我們可以直接利用低隨機性（Temperature=0.1）的大語言模型作為精準的前端編譯器，將人類的大白話直接翻譯成標準的四元組中間碼（Quadruples IR）。</p>
+
+    <div class="chapter">
+        <h2>第一章：核心架構設計 (Compiler Backend VM)</h2>
+        <p>本虛擬機採用<b>暫存器機（Register-based VM）</b>架構設計。指令直接對具名的虛擬暫存器（如 total, i, t1）進行操作，而非傳統 Java Bytecode 的堆疊機模式。變數直接映射至 Python 的字典（哈希表）中，實現動態型態管理。</p>
+        <h3>EBNF 語法結構定義：</h3>
+        <pre><code>quad_list      = { quadruple } ;
+quadruple      = line_num ":" op "," arg1 "," arg2 "," result ;
+op             = "IMM" | "ADD" | "SUB" | "STORE" | "JMP" | "JMP_F" | "CMP_LT" | "CMP_GT" ;</code></pre>
+    </div>
+
+    <div class="chapter">
+        <h2>第二章：實戰 Aider —— 命令列 AI 代理人的極致重構</h2>
+        <p>在 Windows 的 Git Bash 環境下，環境變數常因作業系統隔閡而失效。本書推薦的終極大絕是在專案根目錄建立 <code>.env</code> 檔案：</p>
+        <pre><code>GEMINI_API_KEY=YOUR_API_KEY_HERE</code></pre>
+        <p>啟動 Aider 代理人後，透過高階提示詞，AI 能在幾秒鐘內自動完成多檔案的 Git Diff 對比、代碼注入與自動 Commit 儲存。</p>
+    </div>
+
+    <div class="chapter">
+        <h2>第三章：解密虛擬機控制流迴圈</h2>
+        <p>控制流跳轉（迴圈）是本系統的核心。以下是新加入的 <code>CMP_GT</code> 與減法指令在底層 CPU 迴圈中的運作實作：</p>
+        <pre><code>elif op == "SUB":
+    self.variables[res] = self._get_val(a1) - self._get_val(a2)
+elif op == "CMP_GT":
+    self.variables[res] = 1 if self._get_val(a1) > self._get_val(a2) else 0</code></pre>
+        <p>透過將比較結果寫入暫存器，配合 <code>JMP_F</code>（條件不成立則前向跳出）與 <code>JMP</code>（無條件後向追蹤），即可在虛擬機內部完美模擬出強大的迴圈控制流。</p>
+    </div>
+
+    <hr>
+    <p>🎉 感謝閱讀！歡迎在 GitHub 上開啟 Issue 參與本書的開源修訂。</p>
+</body>
+</html>

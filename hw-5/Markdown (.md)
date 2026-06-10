@@ -1,0 +1,135 @@
+# 📂 經典並行問題專題報告：哲學家用餐問題與死鎖分析
+
+本篇文件詳細探討作業系統（Operating System）中經典的並行控制問題——**哲學家用餐問題（Dining Philosophers Problem）**。我們將探討其如何觸發死鎖（Deadlock），並透過現代並行程式設計的策略，給出完整的解決方案。
+
+---
+
+## 🍽️ 1. 問題背景與情境描述
+
+哲學家用餐問題由著名電腦科學家 艾茲赫爾·戴克斯特拉（Edsger Dijkstra）於 1965 年提出，用來描述多個行程在共用有限資源時所面臨的同步問題。
+
+* **場景設定**：五位哲學家圍繞著一張圓桌坐著，他們的一生都在輪流做兩件事：**思考（Thinking）** 與 **吃飯（Eating）**。
+* **資源限制**：圓桌中央放著一碗通心粉，每位哲學家的左手邊與右手邊各放著一隻筷子。整張桌子上總共只有 **5 隻筷子**。
+* **用餐規則**：
+  1. 哲學家肚子餓時，必須**同時拿到左邊與右邊的兩隻筷子**才能開始吃飯。
+  2. 筷子一次只能被一個人拿著（互斥資源）。
+  3. 哲學家吃飽後，會放下兩隻筷子，繼續思考。
+
+---
+
+## 🚨 2. 死鎖（Deadlock）是如何觸發的？
+
+如果所有哲學家都遵循一套最直覺的演算法：
+> *「當肚子餓時，先拿左手邊的筷子；拿到後，再拿右手邊的筷子。」*
+
+
+
+這將會引發嚴重的**死鎖（Deadlock）**僵局：
+1. 某一瞬間，所有哲學家同時肚子餓了。
+2. 他們同時伸出左手，**每個人都成功拿到了自己左手邊的筷子**。
+3. 接著，每個人都試圖去拿右手邊的筷子。
+4. 然而，右手邊的筷子已經被隔壁的哲學家拿走了。
+5. 所有人都不願意放下手上的筷子，並且無限期等待右手邊的人釋放資源。整個系統就此卡死，最終導致所有人餓死。
+
+### 📌 死鎖的四個必要條件分析
+
+在此情境中，完美契合了作業系統中觸發死鎖的四大必要條件（Coffman conditions）：
+
+| 必要條件 | 在本問題中的具體體現 |
+| :--- | :--- |
+| **1. 互斥 (Mutual Exclusion)** | 筷子是獨佔資源，一隻筷子在同一時間只能被一位哲學家持有。 |
+| **2. 持有並等待 (Hold and Wait)** | 每位哲學家都已經手握一隻左手邊的筷子（持有），同時在等待右手邊的筷子（等待）。 |
+| **3. 不可剝奪 (No Preemption)** | 哲學家很有禮貌（？），不能從隔壁同學的手中強行把筷子奪走。 |
+| **4. 循環等待 (Circular Wait)** | 哲學家們形成了一個閉環的等待鏈：P0 在等 P1 的筷子，P1 在等 P2，...，P4 則在等 P0。 |
+
+---
+
+## 🛠️ 3. 解決方案：破壞循環等待（資源分級法）
+
+要解決死鎖，核心思維就是**破壞四大必要條件的其中一個**。最有效且成本最低的方法，就是打破第 4 條件：**循環等待 (Circular Wait)**。
+
+本實作採用**資源分級/資源排序法（Resource Ordering）**：
+* 規定 **奇數號** 的哲學家（1, 3），必須**先拿左邊，再拿右邊**。
+* 規定 **偶數號** 的哲學家（0, 2, 4），必須**先拿右邊，再拿左邊**。
+
+### 💡 破壞死鎖的底層邏輯
+當 0 號（偶數）與 1 號（奇數）哲學家同時想吃飯時：
+* 0 號會先嘗試拿右邊（即 0 號與 1 號之間的那隻筷子）。
+* 1 號會先嘗試拿左邊（**也是 0 號與 1 號之間的那隻筷子**）。
+
+這意味著相鄰的兩位哲學家會在**第一步就開始強烈競爭同一隻筷子**。輸掉的那個人連第一隻筷子都拿不到，就不會佔用任何資源，從而打破了環狀等待鏈。系統能保證圓圈中至少會有一位哲學家能順利拿到兩隻筷子開飯。
+
+---
+
+## 💻 4. Python 模擬程式實作
+
+以下使用 Python 的 `threading.Lock`（模擬互斥鎖/筷子）與執行緒（模擬哲學家）來完整重現非死鎖的並行運作：
+
+```python
+import threading
+import time
+import random
+
+class Philosopher(threading.Thread):
+    def __init__(self, philosopher_id, left_chopstick, right_chopstick):
+        super().__init__()
+        self.philosopher_id = philosopher_id
+        self.left_chopstick = left_chopstick
+        self.right_chopstick = right_chopstick
+
+    def run(self):
+        for _ in range(3):  # 每個哲學家輪流吃 3 次飯
+            self.think()
+            self.eat()
+
+    def think(self):
+        print(f"🤔 哲學家 {self.philosopher_id} 正在沉思...")
+        time.sleep(random.uniform(0.1, 0.3))
+
+    def eat(self):
+        # 💡 關鍵同步策略：打破「循環等待」
+        # 奇數號先左後右；偶數號先右後左
+        if self.philosopher_id % 2 == 1:
+            first_chopstick = self.left_chopstick
+            second_chopstick = self.right_chopstick
+        else:
+            first_chopstick = self.right_chopstick
+            second_chopstick = self.left_chopstick
+
+        # 嘗試獲取第一隻筷子
+        first_chopstick.acquire()
+        print(f"🥢 哲學家 {self.philosopher_id} 拿起了第一隻筷子")
+        
+        # 刻意微小延遲，若演算法有死鎖漏洞，此處最容易觸發卡死
+        time.sleep(0.05) 
+        
+        # 嘗試獲取第二隻筷子
+        second_chopstick.acquire()
+        print(f"🍱 哲學家 {self.philosopher_id} 成功集齊兩隻筷子，開始享用大餐！")
+        time.sleep(random.uniform(0.1, 0.3))
+        
+        # 用餐完畢，釋放資源
+        second_chopstick.release()
+        first_chopstick.release()
+        print(f"🏳️ 哲學家 {self.philosopher_id} 吃飽了，優雅地放下了兩隻筷子。")
+
+if __name__ == "__main__":
+    num_philosophers = 5
+    # 建立 5 隻筷子（5 把獨立的互斥鎖）
+    chopsticks = [threading.Lock() for _ in range(num_philosophers)]
+    
+    # 初始化並啟動哲學家執行緒
+    philosophers = []
+    for i in range(num_philosophers):
+        left = chopsticks[i]
+        right = chopsticks[(i + 1) % num_philosophers]
+        
+        p = Philosopher(i, left, right)
+        philosophers.append(p)
+        p.start()
+
+    # 等待所有執行緒執行完畢
+    for p in philosophers:
+        p.join()
+        
+    print("\n=== ✅ 所有哲學家都順利吃飽，系統無死鎖發生 ===")

@@ -1,0 +1,66 @@
+# 🚀 wujunyi-0331's Computer Science & Systems Portfolio
+
+歡迎來到我的系統程式與作業系統實作作品集。本倉庫完整收錄了我在編譯器理論、虛擬機器架構、多執行緒並行控制（OS）以及大語言模型（LLM）輔助系統開發中的 6 項核心專案成果。
+
+---
+
+## 📂 專案總目錄索引 (6 Major Courseworks)
+
+| 章節 / 作業 | 專案名稱 | 技術疊棧 (Tech Stack) | 核心實作亮點 |
+| :--- | :--- | :--- | :--- |
+| **[HW1 & HW2]** | [C-Light Interpreter](#1-c-light-interpreter-hw1--hw2) | `C99`, `AST`, `Makefile` | 實作 REPL 互動環境、詞法/語法分析器及抽象語法樹遞迴求值引擎。 |
+| **[HW3]** | [TinyLang Extended Compiler](#2-tinylang-extended-compiler--vm-hw3) | `C99`, `Bytecode`, `VM` | 擴充一維陣列、For 迴圈、短路邏輯、以及 `break`/`continue` 地址回填技術。 |
+| **[HW4]** | [OS Concurrency & Sync](#3-os-concurrency--synchronization-hw4) | `Python`, `Threading`, `Mutex` | 解決關鍵臨界區資源競爭；透過破除循環等待實作哲學家就餐死鎖防禦。 |
+| **[HW5]** | [AI-Driven Compiler IR VM](#4-ai-driven-compiler-ir-virtual-machine-hw5) | `Python`, `Gemini API`, `C99` | 創新架構：利用低隨機性 LLM 作為編譯器前端，後端對接自製 C 語言四元組 VM。 |
+| **[HW6]** | [AI-Driven Tech Book Project](#5-ai-driven-tech-book-project-hw6) | `Markdown`, `HTML5`, `CSS3` | 將 AI 協同開發編譯器與虛擬機的實戰工程經驗，撰寫並發行成開源數位電子書。 |
+
+---
+
+## 💡 專案詳細分解說明
+
+### 1. C-Light Interpreter (HW1 & HW2)
+* **模組結構**：`main.c` (REPL 介面)、`lexer.c` (Token 分割)、`parser.c` (AST 建立)、`eval.c` (求值)、`symbol_table.c` (變數管理)。
+* **特色**：內建動態記憶體回收與除零安全保護，並將原始碼由中文化語法完全重構重塑為國際標準 C 語法。
+
+### 2. TinyLang Extended Compiler & VM (HW3)
+* **控制流深化**：實作了三段式 `for` 迴圈以及巢狀迴圈管理棧 (`loop_stack`)。
+* **動態補丁**：利用延遲地址回填（Late-bound Backpatching）處理迴圈內部的 `break` 跳轉，並實作一維陣列動態分配核心指令 (`OP_ARRAY_ALLOC`)。
+
+### 3. OS Concurrency & Synchronization (HW4)
+本單元深入作業系統核心的行程/執行緒同步議題，提供三大經典問題的具體實作：
+* **`bank.py`**：利用 `threading.Lock` 互斥鎖確保臨界區（Critical Section）資產存提的原子性（Atomicity）。
+* **`think.py` / `threading.Lock.py`**：實作哲學家就餐問題，藉由**「奇數號先拿左、偶數號先拿右」**的非對稱資源調配，徹底打破死鎖的「循環等待」必要條件。
+* **`work.py`**：利用 `threading.Condition` 條件變數完美協調生產者與消費者的排隊緩衝區等待與喚醒機制。
+
+### 4. AI-Driven Compiler IR Virtual Machine (HW5)
+* **前端開發**：由 `ai_compiler.py` 驅動，利用 `Gemini API` (Temperature=0.1) 將人類日常自然語言（大白話）精準翻譯成標準的四元組（Quadruples）中間碼。
+* **後端執行**：`compiler.c` 實作了一個高效的暫存器型虛擬機（Register-based VM），動態解析並安全執行由 AI 編譯出來的 IR 指令集（`IMM`, `ADD`, `JMP_F` 等）。
+
+### 5. AI-Driven Tech Book Project (HW6)
+* **內容精隨**：將 HW5 的「人話寫扣」開發經驗彙整至 `book.md`。詳細記錄了如何突破 Windows Git Bash 環境變數限制、使用 `.env` 管理 API 金鑰，以及如何精準進行 Prompt 工程調教。
+* **展示層**：整合 `index.html` 搭配現代極簡風格 CSS，一鍵生成漂亮的開源科技書籍網頁。
+
+---
+
+## 🛠️ 本地建置與執行流程
+
+```bash
+# ----- 執行 HW1/HW2 C 直譯器 -----
+cd c-light-interpreter
+make
+./interpreter
+
+# ----- 執行 HW3 TinyLang 編譯器與 VM -----
+cd tiny-compiler-hw3
+gcc -Wall -g -o compiler main.c lexer.c codegen.c
+./compiler
+
+# ----- 執行 HW4 多執行緒同步測試 -----
+python bank.py
+python threading.Lock.py
+python work.py
+
+# ----- 執行 HW5 AI 編譯器前端與後端 VM -----
+python ai_compiler.py
+gcc -o vm compiler.c
+./vm output.quad
